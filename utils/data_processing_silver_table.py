@@ -5,6 +5,7 @@ from pyspark.sql.types import (
     StringType,
     IntegerType,
     FloatType,
+    DoubleType,
     DateType
 )
 from pyspark.sql.window import Window
@@ -30,7 +31,7 @@ def clean_numeric_string_spark(column_name):
             F.trim(col(column_name).cast(StringType())),
             "_",
             ""
-        ).cast(FloatType())
+        ).cast(DoubleType())
     )
 
 
@@ -88,7 +89,9 @@ def clean_features_clickstream(df):
 # Financials
 
 def clean_features_financials(df):
+   
     df = df.withColumn("Customer_ID", clean_string_spark("Customer_ID"))
+    df = df.withColumn("Payment_of_Min_Amount", clean_string_spark("Payment_of_Min_Amount"))
 
     numeric_cols = [
         "Annual_Income",
@@ -105,6 +108,19 @@ def clean_features_financials(df):
 
     for c in numeric_cols:
         df = df.withColumn(c, clean_numeric_string_spark(c))
+
+    decimal_cols = [
+        "Annual_Income",
+        "Monthly_Inhand_Salary",
+        "Outstanding_Debt",
+        "Credit_Utilization_Ratio",
+        "Total_EMI_per_month",
+        "Amount_invested_monthly",
+        "Monthly_Balance"
+    ]
+
+    for c in decimal_cols:
+        df = df.withColumn(c, F.round(col(c), 3))
 
     df = df.withColumn(
         "Num_Bank_Accounts",
@@ -184,6 +200,8 @@ def clean_features_financials(df):
 # LMS Loan Daily
 
 def clean_lms_loan_daily(df):
+    df = df.withColumn("loan_id", clean_string_spark("loan_id"))
+    df = df.withColumn("Customer_ID", clean_string_spark("Customer_ID"))
 
     # enforce schema / data types
     column_type_map = {

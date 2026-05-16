@@ -12,7 +12,7 @@ import pyspark
 import pyspark.sql.functions as F
 import argparse
 
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, to_date
 from pyspark.sql.types import StringType, IntegerType, FloatType, DateType
 
 # save bronze table to datamart - IRL connect to database to write
@@ -84,7 +84,11 @@ def process_bronze_features_financials(snapshot_date_str, bronze_financials_dire
     # load data - IRL ingest from back end source system
     df = (
         spark.read.csv(csv_file_path, header=True, inferSchema=True)
-        .filter(col("snapshot_date") == snapshot_date)
+        .withColumn(
+            "snapshot_date",
+            to_date(col("snapshot_date"), "d/M/yyyy")
+        )
+        .filter(col("snapshot_date") == snapshot_date.date())
     )
 
     print(snapshot_date_str, "financials row count:", df.count())
@@ -153,3 +157,5 @@ def process_bronze_table(
         bronze_clickstream_directory,
         spark
     )
+
+    
