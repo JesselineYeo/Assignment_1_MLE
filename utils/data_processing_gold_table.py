@@ -69,8 +69,6 @@ def process_gold_risk_behaviour(snapshot_date_str, silver_clickstream_directory,
     df = spark.read.parquet(filepath)
     print('loaded from:', filepath, 'row count:', df.count())
 
-    # apply cleaning
-    df = df.drop("loan_id")
 
     # save gold table - IRL connect to database to write
     partition_name = "gold_risk_behaviour_" + snapshot_date_str.replace('-','_') + '.parquet'
